@@ -140,7 +140,16 @@ public class EventControllerTests {
 		
 		this.mockMvc.perform(post("/api/events")
 				.contentType(MediaType.APPLICATION_JSON) // json 보내는 content 
-				.accept(this.objectMapper.writeValueAsString(event)))  // object로변환해서 보냄
-				.andExpect(status().isBadRequest());
+				.accept(MediaTypes.HAL_JSON_VALUE) 
+				.content(this.objectMapper.writeValueAsString(event)))  // object로변환해서 보냄
+				.andDo(print())
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$[0].objectName").exists())
+				.andExpect(jsonPath("$[0].defaultMessage").exists()) // 기본 메시지 먼지
+				.andExpect(jsonPath("$[0].code").exists()) // 코디가 있는지
+//				.andExpect(jsonPath("$[0].rejectedValue").exists()) // 입력을 거절당한 값은 무엇인지 
+//				.andExpect(jsonPath("$[0].field").exists()) // 어떤 필드에서 발생한 에러
+				;
+		
 	}
 }
