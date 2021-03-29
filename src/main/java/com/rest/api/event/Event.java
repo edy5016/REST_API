@@ -38,4 +38,22 @@ public class Event {
 	private int basePrice;
 	@Enumerated(EnumType.STRING) // 기본값은 순서대로 0, 1, 2 로 하는데 나중에 값바뀌면 꼬일수도 있어서 String 으로 바꾸는게 나음.
 	private EventStatus eventStatus = EventStatus.DRAFT;
+
+	public void update() {
+		if (this.basePrice == 0 && this.maxPrice == 0) {
+			this.free = true;
+		} else {
+			this.free = false;
+		}
+		
+		// update offline
+		// isBlank 자바 11 부터 지원 (비어있는지 없는지 체크) 공백문자 까지 다 체크해줌.
+		// 자바 11 밑은  String 클래스에있는 걸로 trim을 한 후 isEmpty() 사용 
+		if (this.location == null || this.location.isBlank()) {
+			this.offline = false;
+		} else {
+			this.offline = true;
+		}
+		
+	}
 }

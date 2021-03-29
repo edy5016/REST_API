@@ -55,6 +55,7 @@ public class EventController {
 //				.description(eventDto.getDescription())
 //				.build(); --> 이런과정을 해줘야 되는데  라이브러리 사용하면 간편하게 가능.
 		Event event = modelMapper.map(eventDto, Event.class); // 이벤트 객체로 변환
+		event.update();  //이벤트 저장하기 전에 이벤트를 갱신해서 유료인지 무료인지 변경해줘야댐. (원래서비스쪽으로 지금은 서비스간단해서)
 		
 		Event newEvent = this.eventRepository.save(event);
 		// 링크를 만들고 uri로 변환. 

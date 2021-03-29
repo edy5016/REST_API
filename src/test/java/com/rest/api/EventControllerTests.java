@@ -51,8 +51,8 @@ public class EventControllerTests {
 				.description("REST API")
 				.beginEnrollmentDateTime(LocalDateTime.of(2018, 11, 12, 14, 4, 21))
 				.closeEnrollmentDateTime(LocalDateTime.of(2018, 11, 13, 14, 4, 21))
-				.beginEventDateTime(LocalDateTime.of(2018, 11, 14, 14, 4, 21))
-				.endEventDateTime(LocalDateTime.of(2018, 11, 12, 14, 4, 21))
+				.beginEventDateTime(LocalDateTime.of(2018, 11, 10, 14, 4, 21))
+				.endEventDateTime(LocalDateTime.of(2018, 11, 15, 15, 4, 21))
 				.basePrice(100)
 				.maxPrice(200)
 				.limitOfEnrollment(100)
@@ -66,15 +66,15 @@ public class EventControllerTests {
 	 // perform안에 주는게 요청
 		mockMvc.perform(post("/api/events/")
 				.contentType(MediaType.APPLICATION_JSON) // 요청에 본문에 JSON을 담아서 보내고 있다고 알려줌
-				.accept(MediaTypes.HAL_JSON)  //내가원하는 요청은 HAL 응답을 받고싶다.
+				.accept(MediaTypes.HAL_JSON_VALUE)  //내가원하는 요청은 HAL 응답을 받고싶다.
 				.content(objectMapper.writeValueAsString(event))) // objectMapper json 문자열로 바꿔서 요청본문에 요청
 			  .andDo(print()) // 응답 확인 하기 위해
 			  .andExpect(status().isCreated())
 			  .andExpect(jsonPath("id").exists())
 			  .andExpect(header().exists(HttpHeaders.LOCATION))
 			  .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_VALUE))
-			  .andExpect(jsonPath("id").value(Matchers.not(100)))
-			  .andExpect(jsonPath("free").value(Matchers.not(true)))
+			  .andExpect(jsonPath("free").value(false))
+			  .andExpect(jsonPath("offline").value(true))
 			  .andExpect(jsonPath("eventStatus").value(EventStatus.DRAFT.name()));
 	}
 	
