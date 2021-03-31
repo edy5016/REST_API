@@ -1,5 +1,6 @@
 package com.rest.api;
 
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -8,12 +9,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.time.LocalDateTime;
 
-import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
+import org.springframework.boot.test.autoconfigure.restdocs.RestDocsMockMvcBuilderCustomizer;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -21,6 +24,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rest.api.common.RestDocsConfiguration;
 import com.rest.api.common.TestDescription;
 import com.rest.api.event.Event;
 import com.rest.api.event.EventDto;
@@ -31,6 +35,8 @@ import com.rest.api.event.EventStatus;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @AutoConfigureMockMvc  // @SpringBootTest 사용시 mocmvc 쓸려면 이거 써야됨/
+@AutoConfigureRestDocs // restdocs 사용하기 위한 어노테이션
+@Import(RestDocsConfiguration.class) //다른 스프링 빈설정을 읽어와서 사용하는 방법
 public class EventControllerTests {
 
 	// moc mvc 주입 받아서 사용가능
@@ -75,7 +81,12 @@ public class EventControllerTests {
 			  .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_VALUE))
 			  .andExpect(jsonPath("free").value(false))
 			  .andExpect(jsonPath("offline").value(true))
-			  .andExpect(jsonPath("eventStatus").value(EventStatus.DRAFT.name()));
+			  .andExpect(jsonPath("eventStatus").value(EventStatus.DRAFT.name()))
+			  .andExpect(jsonPath("_links.self").exists())  // 링크정보로 클라이언트는 링크정보를 보고 다음상태를 이동할 수 있어야 한다. 
+			  .andExpect(jsonPath("_links.query-events").exists())
+			  .andExpect(jsonPath("_links.update-event").exists())
+			  .andDo(document("create-event"))
+			  ;
 	}
 	
 	@Test
@@ -110,17 +121,17 @@ public class EventControllerTests {
 			  .andDo(print()) // 응답 확인 하기 위해
 			  .andExpect(status().isBadRequest()); // 응답값
 	}
-	
-	@Test
-	@TestDescription("입력 받을 수 없는 값이 비어 있는 경우 발생하는 테스트")
-	public void createEventBadRequestEmptyInput() throws Exception {
-		EventDto eventDto = EventDto.builder().build();
-		
-		this.mockMvc.perform(post("/api/events")
-				.contentType(MediaType.APPLICATION_JSON) // json 보내는 content 
-				.accept(this.objectMapper.writeValueAsString(eventDto)))  // object로변환해서 보냄
-				.andExpect(status().isBadRequest());
-	}
+//	
+//	@Test
+//	@TestDescription("입력 받을 수 없는 값이 비어 있는 경우 발생하는 테스트")
+//	public void createEventBadRequestEmptyInput() throws Exception {
+//		EventDto eventDto = EventDto.builder().build();
+//		
+//		this.mockMvc.perform(post("/api/events")
+//				.contentType(MediaType.APPLICATION_JSON) // json 보내는 content 
+//				.accept(this.objectMapper.writeValueAsString(eventDto)))  // object로변환해서 보냄
+//				.andExpect(status().isBadRequest());
+//	}
 	
 	@Test
 	@TestDescription("입력 값이 잘못된 경우에 에러가 발생하는 테스트") //junit5 에서 테스트로 작성하면 이목록들이 작성한 이름으로 나옴 junit은 메서드 이름으로 나옴.
