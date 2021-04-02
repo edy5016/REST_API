@@ -1,5 +1,11 @@
 package com.rest.api;
 
+import static org.springframework.restdocs.headers.HeaderDocumentation.responseHeaders;
+import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
+import static org.springframework.restdocs.headers.HeaderDocumentation.requestHeaders;
+import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.linkWithRel;
+import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.links;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -13,7 +19,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
-import org.springframework.boot.test.autoconfigure.restdocs.RestDocsMockMvcBuilderCustomizer;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -85,7 +90,65 @@ public class EventControllerTests {
 			  .andExpect(jsonPath("_links.self").exists())  // 링크정보로 클라이언트는 링크정보를 보고 다음상태를 이동할 수 있어야 한다. 
 			  .andExpect(jsonPath("_links.query-events").exists())
 			  .andExpect(jsonPath("_links.update-event").exists())
-			  .andDo(document("create-event"))
+			  .andDo(document("create-event",
+					  links(
+							  linkWithRel("self").description("link to self"),
+							  linkWithRel("query-events").description("link to query events"),  
+							  linkWithRel("update-event").description("link to update events")  
+					  ),
+					  requestHeaders(
+							  headerWithName(HttpHeaders.ACCEPT).description("accept header"),
+							  headerWithName(HttpHeaders.CONTENT_TYPE).description("content type header")
+					  ),
+					  requestFields(
+							  fieldWithPath("name").description("Name of new event"),
+							  fieldWithPath("description").description("description of new event"),
+							  fieldWithPath("beginEnrollmentDateTime").description("beginEnrollmentDateTime of new event"),
+							  fieldWithPath("closeEnrollmentDateTime").description("closeEnrollmentDateTime of new event"),
+							  fieldWithPath("beginEventDateTime").description("beginEventDateTime of new event"),
+							  fieldWithPath("endEventDateTime").description("endEventDateTime of new event"),
+							  fieldWithPath("location").description("location of new event"),
+							  fieldWithPath("maxPrice").description("maxPrice of new event"),
+							  fieldWithPath("limitOfEnrollment").description("limitOfEnrollment of new event"),
+							  fieldWithPath("basePrice").description("basePrice of new event")
+					  ),
+					  responseHeaders(
+							  headerWithName(HttpHeaders.LOCATION).description("location header"),
+							  headerWithName(HttpHeaders.CONTENT_TYPE).description("Content type")
+			  		  ),
+					  /**
+					   *   relaxedResponseFields 응답의 부가적인 정보가 더있어도 무시함. relaxedResponseFields 단점은 정확한 문서를 만들지 못함.
+					   *   장점 : 문서 일부분만 테스트 할수 있다.
+					   *   단점 : 정확한 문서를 생성하지 못한다.
+					   *   
+					   *   responseHeaders : links 만들어준 부분을 본문에 일부로 보기때문에 검증을 안했기 때문에 relaxedReponseFields를 사용.
+					   *   relaxedReponseFields 일부분만 확인하는데 우리가 기술한 필드만 일치만 하면 성공 
+					   *   responseHeaders 사용시 에러남. 이미 links 정보를 이미 위에서 확인하고 문서화했다. 그런데 단지 응답에서 links가 없다고 에러난다.
+					   *   선택지는 두가지다.
+					   *   1. relaxedReponseFields
+					   *   2. responseHeaders 사용시 링크스 필드를 체크
+					   *   	  fieldWithPath("_links.self").description("link to self")
+					   *   	  fieldWithPath("_links.query-events").description("link to query-events")
+					   *   	  fieldWithPath("_links.update-event").description("link to update-event")
+					   *      
+					   */
+					  relaxedResponseFields(  
+							  fieldWithPath("id").description("Nadme of new event"),
+							  fieldWithPath("name").description("Name of new event"),
+							  fieldWithPath("description").description("description of new event"),
+							  fieldWithPath("beginEnrollmentDateTime").description("beginEnrollmentDateTime of new event"),
+							  fieldWithPath("closeEnrollmentDateTime").description("closeEnrollmentDateTime of new event"),
+							  fieldWithPath("beginEventDateTime").description("beginEventDateTime of new event"),
+							  fieldWithPath("endEventDateTime").description("endEventDateTime of new event"),
+							  fieldWithPath("location").description("location of new event"),
+							  fieldWithPath("maxPrice").description("maxPrice of new event"),
+							  fieldWithPath("limitOfEnrollment").description("limitOfEnrollment of new event"),
+							  fieldWithPath("basePrice").description("basePrice of new event"),
+							  fieldWithPath("free").description("free of new event"),
+							  fieldWithPath("offline").description("offline of new event"),
+							  fieldWithPath("eventStatus").description("eventStatus of new event")
+					  )
+			   ))
 			  ;
 	}
 	
