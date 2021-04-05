@@ -25,6 +25,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -42,6 +43,7 @@ import com.rest.api.event.EventStatus;
 @AutoConfigureMockMvc  // @SpringBootTest 사용시 mocmvc 쓸려면 이거 써야됨/
 @AutoConfigureRestDocs // restdocs 사용하기 위한 어노테이션
 @Import(RestDocsConfiguration.class) //다른 스프링 빈설정을 읽어와서 사용하는 방법
+@ActiveProfiles("test") //test 프로파일로 프로파일로 실행하겠다. 기본적인 application.properties랑 test application.properties 사용하게된다. 
 public class EventControllerTests {
 
 	// moc mvc 주입 받아서 사용가능
@@ -90,11 +92,12 @@ public class EventControllerTests {
 			  .andExpect(jsonPath("_links.self").exists())  // 링크정보로 클라이언트는 링크정보를 보고 다음상태를 이동할 수 있어야 한다. 
 			  .andExpect(jsonPath("_links.query-events").exists())
 			  .andExpect(jsonPath("_links.update-event").exists())
-			  .andDo(document("create-event",
+			  .andDo(document("create-event",  //문서이름
 					  links(
 							  linkWithRel("self").description("link to self"),
 							  linkWithRel("query-events").description("link to query events"),  
-							  linkWithRel("update-event").description("link to update events")  
+							  linkWithRel("update-event").description("link to update events"), 
+							  linkWithRel("profile").description("profile to  events")
 					  ),
 					  requestHeaders(
 							  headerWithName(HttpHeaders.ACCEPT).description("accept header"),
@@ -130,7 +133,7 @@ public class EventControllerTests {
 					   *   	  fieldWithPath("_links.self").description("link to self")
 					   *   	  fieldWithPath("_links.query-events").description("link to query-events")
 					   *   	  fieldWithPath("_links.update-event").description("link to update-event")
-					   *      
+					   *      fieldWithPath("_links.profile").description("profile to update-event")
 					   */
 					  relaxedResponseFields(  
 							  fieldWithPath("id").description("Nadme of new event"),

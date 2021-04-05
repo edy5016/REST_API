@@ -72,6 +72,7 @@ public class EventController {
 		// eventResource.add(selfLinkBuilder.withSelfRel()); // withSelfRel()를 해주면 self링크를 만들어줌. self 링크가 location header랑 같음.
 		// eventResource 만들떄 self 링크는 만들어 줘서 주석처리.
 		eventResource.add(selfLinkBuilder.withRel("update-event")); // 릴레이션은 다른데 링크는 같음. 
+		eventResource.add(new Link("/docs/index.html#resources-events-create").withRel("profile"));
 		
 		
 		/**
