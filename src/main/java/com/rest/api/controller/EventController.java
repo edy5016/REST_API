@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.rest.api.common.ErrorsResource;
 import com.rest.api.event.Event;
 import com.rest.api.event.EventDto;
 import com.rest.api.event.EventRepository;
@@ -44,13 +45,15 @@ public class EventController {
 	@PostMapping
 	public ResponseEntity createEvent(@RequestBody @Valid EventDto eventDto, Errors errors) {
 		if (errors.hasErrors()) {
-			return ResponseEntity.badRequest().body(errors);
+//			return ResponseEntity.badRequest().body(errors);
+			return badRequest(errors);
 		}
 		// Errors 객체는 자바빈 스팩을 준수하고 있는 객체가아니라 BeanSerialize 통해서 변환 못함 .
 		// return ResponseEntity.badRequest().build().body(errors); 그러므로 블가능
 		eventValidator.validate(eventDto, errors);
 		if (errors.hasErrors()) {
-			return ResponseEntity.badRequest().body(errors);
+//			return ResponseEntity.badRequest().body(errors);
+			return badRequest(errors);
 		}
 		
 //		Event event =  Event.builder()
@@ -81,5 +84,9 @@ public class EventController {
 		
 		return ResponseEntity.created(createUri).body(eventResource); // 이벤트 리소스를 본문에 넣어줌.
 	}
+
+	private ResponseEntity badRequest(Errors errors) {
+		return ResponseEntity.badRequest().body(new ErrorsResource(errors)); //bad request 만들떄
+ 	}
    
 }

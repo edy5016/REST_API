@@ -224,6 +224,7 @@ public class EventControllerTests {
 				.andExpect(jsonPath("$[0].objectName").exists())
 				.andExpect(jsonPath("$[0].defaultMessage").exists()) // 기본 메시지 먼지
 				.andExpect(jsonPath("$[0].code").exists()) // 코디가 있는지
+				.andExpect(jsonPath("_links.index").exists()) // 인덱스 링크가 있기를 기대
 //				.andExpect(jsonPath("$[0].rejectedValue").exists()) // 입력을 거절당한 값은 무엇인지 
 //				.andExpect(jsonPath("$[0].field").exists()) // 어떤 필드에서 발생한 에러
 				;
