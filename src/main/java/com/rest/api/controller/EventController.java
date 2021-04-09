@@ -3,6 +3,7 @@ package com.rest.api.controller;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 
 import java.net.URI;
+import java.util.Optional;
 
 import javax.validation.Valid;
 
@@ -18,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -108,6 +110,19 @@ public class EventController {
 		return ResponseEntity.ok(pageResources);
 	}
 	
+	@GetMapping("/{id}")
+	public ResponseEntity getEvent(@PathVariable Integer id) {
+		Optional<Event> optionalEvent = this.eventRepository.findById(id); // 아이디를 찾아옴 찾아오면 기본타입이 Optional
+		if (optionalEvent.isEmpty()) {
+			return ResponseEntity.notFound().build(); 
+		}
+		// 꺼내서 리소르로 변경해서 보냄
+		Event event = optionalEvent.get();
+		EventResource eventResource = new EventResource(event);
+		eventResource.add(new Link("/docs/index.html#resources-events-get").withRel("profile"));  //#resources-events-list이런 정보들은 apidoc에서 정의되있음
+		return ResponseEntity.ok(eventResource);
+		
+	}
 	
 	private ResponseEntity badRequest(Errors errors) {
 		return ResponseEntity.badRequest().body(new ErrorsResource(errors)); //bad request 만들떄
