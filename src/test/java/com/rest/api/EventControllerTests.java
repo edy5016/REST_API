@@ -45,21 +45,21 @@ import com.rest.api.event.EventRepository;
 import com.rest.api.event.EventStatus;
 
 
-//@WebMvcTest // 웹 과 관련된 빈들이 모두 등록 됨.  웹용 빌드들만 빈에등록해줌
-@RunWith(SpringRunner.class)
-@SpringBootTest
-@AutoConfigureMockMvc  // @SpringBootTest 사용시 mocmvc 쓸려면 이거 써야됨/
-@AutoConfigureRestDocs // restdocs 사용하기 위한 어노테이션
-@Import(RestDocsConfiguration.class) //다른 스프링 빈설정을 읽어와서 사용하는 방법
-@ActiveProfiles("test") //test 프로파일로 프로파일로 실행하겠다. 기본적인 application.properties랑 test application.properties 사용하게된다. 
-public class EventControllerTests {
+////@WebMvcTest // 웹 과 관련된 빈들이 모두 등록 됨.  웹용 빌드들만 빈에등록해줌
+//@RunWith(SpringRunner.class)
+//@SpringBootTest
+//@AutoConfigureMockMvc  // @SpringBootTest 사용시 mocmvc 쓸려면 이거 써야됨/
+//@AutoConfigureRestDocs // restdocs 사용하기 위한 어노테이션
+//@Import(RestDocsConfiguration.class) //다른 스프링 빈설정을 읽어와서 사용하는 방법
+//@ActiveProfiles("test") //test 프로파일로 프로파일로 실행하겠다. 기본적인 application.properties랑 test application.properties 사용하게된다. 
+public class EventControllerTests extends BaseControllerTest{
 
 	// moc mvc 주입 받아서 사용가능
-	@Autowired
-	MockMvc mockMvc; // 가짜 요청을 만들어서 디스패처 서블릿을 만들어서 요청 및 응답 받을 수 있다. 웹서버를 만들지않아서 빠름. repository를 등록해주지않음.
-	
-	@Autowired
-	ObjectMapper objectMapper;
+//	@Autowired
+//	MockMvc mockMvc; // 가짜 요청을 만들어서 디스패처 서블릿을 만들어서 요청 및 응답 받을 수 있다. 웹서버를 만들지않아서 빠름. repository를 등록해주지않음.
+
+//	@Autowired
+//	ObjectMapper objectMapper;
 	
 //	@MockBean //repository에 해당하는 빈을 목으로 만들어 달라.
 //	EventRepository eventRepository;
@@ -67,9 +67,8 @@ public class EventControllerTests {
 	@Autowired
 	EventRepository eventRepository;
 	
-	@Autowired
-	ModelMapper modelMapper;
-	
+//	@Autowired
+//	ModelMapper modelMapper;
 
 	@Test
 	@TestDescription("정상적으로 이벤트를 생성하는 테스트")
