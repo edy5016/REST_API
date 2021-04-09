@@ -1,19 +1,23 @@
 package com.rest.api;
 
-import static org.springframework.restdocs.headers.HeaderDocumentation.responseHeaders;
 import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
 import static org.springframework.restdocs.headers.HeaderDocumentation.requestHeaders;
+import static org.springframework.restdocs.headers.HeaderDocumentation.responseHeaders;
 import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.linkWithRel;
 import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.links;
-import static org.springframework.restdocs.payload.PayloadDocumentation.*;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
+import static org.springframework.restdocs.payload.PayloadDocumentation.relaxedResponseFields;
+import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.LocalDateTime;
+import java.util.stream.IntStream;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,12 +32,14 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rest.api.common.RestDocsConfiguration;
 import com.rest.api.common.TestDescription;
 import com.rest.api.event.Event;
 import com.rest.api.event.EventDto;
+import com.rest.api.event.EventRepository;
 import com.rest.api.event.EventStatus;
 
 
@@ -55,6 +61,10 @@ public class EventControllerTests {
 	
 //	@MockBean //repository에 해당하는 빈을 목으로 만들어 달라.
 //	EventRepository eventRepository;
+	
+	@Autowired
+	EventRepository eventRepository;
+	
 
 	@Test
 	@TestDescription("정상적으로 이벤트를 생성하는 테스트")
@@ -229,5 +239,44 @@ public class EventControllerTests {
 //				.andExpect(jsonPath("$[0].field").exists()) // 어떤 필드에서 발생한 에러
 				;
 		
+	}
+	
+	@Test
+	@TestDescription("30개의 이벤트를 10개씩 두번째 페이지 조회하기")
+	public void queryEvents() throws Exception {
+		
+//		IntStream.range(0, 30).forEach(i -> {
+//			this.generationEvent(i);
+//		});
+		
+		// Given 
+		IntStream.range(0, 30).forEach(this::generationEvent);
+		
+		//when 
+		this.mockMvc.perform(get("/api/events")
+				.param("page", "1")
+				.param("size", "10")
+				.param("sort", "name,DESC")
+			)
+			.andDo(print())
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("page").exists()) //페이지 관련된 파라미터
+			.andExpect(jsonPath("_embedded.eventResourceList[0]._links.self").exists())
+			.andExpect(jsonPath("_links.self").exists())
+			.andExpect(jsonPath("_links.profile").exists()) //profile 우리가 만들어야뎀 
+			.andDo(document("query-events")) //profile을 추가할라면 document를 만들어야됨
+			// todo  links first 는 처음 페이지다 
+			// links next 는 다음페이지다 문서화 필요
+			;
+	}
+	
+	// 이벤트 30 개 저장
+	private void generationEvent(int index) {
+		Event event = Event.builder()
+				.name("event" +index)	
+				.description("test event")
+				.build();
+		
+		this.eventRepository.save(event);
 	}
 }

@@ -7,12 +7,17 @@ import java.net.URI;
 import javax.validation.Valid;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.RepresentationModel;
 import org.springframework.hateoas.server.mvc.ControllerLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -85,8 +90,28 @@ public class EventController {
 		return ResponseEntity.created(createUri).body(eventResource); // 이벤트 리소스를 본문에 넣어줌.
 	}
 
+	/**
+	 * 
+	 * Pageable : 이 인터페이스는 페이징과 관련된 파라미터들을 받아올 수 있음.
+	 * 페이지를 리소스로 바꿔서 링크 정보(현재페이지, 다음페이지, 마지막페이지..) 를 만들어야 되는데 그떄 유용하게 사용하는게 JPA가 제공하는 PagedResourcesAssembler 사용
+	 * PagedResourcesAssembler를 사용해서 리소스로 변경
+	 * 
+	 * 한 건에대한 링크는 없다.
+	 * 각각에 들어있는 것을 이벤트 리소르로 변경함 
+	 *   assembler.toModel(page) -> assembler.toModel(page, e -> new EventResource(e));
+	 */
+	@GetMapping
+	public ResponseEntity queryEvents(Pageable pageable, PagedResourcesAssembler<Event> assembler) {
+		Page<Event> page = this.eventRepository.findAll(pageable);
+		RepresentationModel pageResources = assembler.toModel(page, e -> new EventResource(e));
+		pageResources.add(new Link("/docs/index.html#resources-events-list").withRel("profile")); // 링크 추가
+		return ResponseEntity.ok(pageResources);
+	}
+	
+	
 	private ResponseEntity badRequest(Errors errors) {
 		return ResponseEntity.badRequest().body(new ErrorsResource(errors)); //bad request 만들떄
  	}
+	
    
 }
