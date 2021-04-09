@@ -14,13 +14,13 @@ import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.RepresentationModel;
-import org.springframework.hateoas.server.mvc.ControllerLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -122,6 +122,42 @@ public class EventController {
 		eventResource.add(new Link("/docs/index.html#resources-events-get").withRel("profile"));  //#resources-events-list이런 정보들은 apidoc에서 정의되있음
 		return ResponseEntity.ok(eventResource);
 		
+	}
+	
+	@PutMapping("/{id}")
+	public ResponseEntity updateEvent(@PathVariable Integer id,
+			@RequestBody @Valid EventDto eventDto,
+			Errors errors) {
+		
+		Optional<Event> optionalEvent = this.eventRepository.findById(id);
+		
+		if (optionalEvent.isEmpty()) {
+			return ResponseEntity.notFound().build();
+		}
+		
+		// 바인딩한 에러가 있으면
+		if (errors.hasErrors()) {
+			return badRequest(errors);
+		}
+		
+		// 비지니스 로직 검사
+		this.eventValidator.validate(eventDto, errors);
+		if (errors.hasErrors()) {
+			return badRequest(errors);
+		}
+		// 데이터 베이스에서 읽어온 기존 데이터
+		Event existEvent = optionalEvent.get();
+		
+		// 업데이트할 데이터 : eventDto 
+		this.modelMapper.map(eventDto, existEvent); // 어디있는 데이터를 어디로
+		Event savedEvent = this.eventRepository.save(existEvent);
+		
+		// 이벤트 리소르로 변환 
+		EventResource eventResource = new EventResource(savedEvent);
+		// 프로필로 가는 링크추가(응답을 설명해줄수 있는 링크)
+		eventResource.add(new Link("/docs/index.html#resources-events-update").withRel("profile"));
+		
+		return ResponseEntity.ok(eventResource);
 	}
 	
 	private ResponseEntity badRequest(Errors errors) {

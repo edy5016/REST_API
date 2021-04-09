@@ -10,6 +10,7 @@ import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWit
 import static org.springframework.restdocs.payload.PayloadDocumentation.relaxedResponseFields;
 import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -21,6 +22,7 @@ import java.util.stream.IntStream;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -64,6 +66,9 @@ public class EventControllerTests {
 	
 	@Autowired
 	EventRepository eventRepository;
+	
+	@Autowired
+	ModelMapper modelMapper;
 	
 
 	@Test
@@ -296,6 +301,79 @@ public class EventControllerTests {
 				;	
 	}
 	
+	@Test
+	@TestDescription("이벤트를 정상적으로 수행하기")
+	public void updateEvent() throws Exception {
+		// given
+		Event event = this.generationEventUpdate(200);
+		EventDto eventDto = this.modelMapper.map(event, EventDto.class);
+		String eventName = "update Event";
+		eventDto.setName(eventName);
+		
+		// when & then
+		this.mockMvc.perform(put("/api/events/{id}", event.getId())
+				.contentType(MediaType.APPLICATION_JSON_UTF8)
+				.content(this.objectMapper.writeValueAsString(eventDto))
+				)
+				.andDo(print())
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("name").value(eventName))
+				.andExpect(jsonPath("_links.self").exists())
+				.andDo(document("update-event")); // 문서화  links, request 필드, response 필드 다넣어줘야뎀
+		;
+	}
+	
+	@Test
+	@TestDescription("입력값이 비어있는경우  이벤트 수정 실패")
+	public void updateEventEmpty() throws Exception {
+		Event event = this.generationEventUpdate(200);
+		
+		EventDto eventDto = new EventDto();
+		
+		this.mockMvc.perform(put("/api/events/{id}", event.getId())
+				.contentType(MediaType.APPLICATION_JSON_UTF8)
+				.content(this.objectMapper.writeValueAsString(eventDto))
+				)
+			.andDo(print())
+			.andExpect(status().isBadRequest());
+			;
+	}
+	
+	@Test
+	@TestDescription("입력값이 잘못된 경우에 이벤트 수정 실패")
+	public void updateEventWrong() throws Exception {
+		Event event = this.generationEventUpdate(200);
+		
+		EventDto eventDto = this.modelMapper.map(event, EventDto.class);
+		eventDto.setBasePrice(20000);
+		eventDto.setMaxPrice(1000);
+		
+		
+		this.mockMvc.perform(put("/api/events/{id}", event.getId())
+				.contentType(MediaType.APPLICATION_JSON_UTF8)
+				.content(this.objectMapper.writeValueAsString(eventDto))
+				)
+			.andDo(print())
+			.andExpect(status().isBadRequest());
+			;
+	}
+	
+	@Test
+	@TestDescription("존재하지 않는 이벤트 수정 실패")
+	public void updateEvent404() throws Exception {
+		Event event = this.generationEventUpdate(200);
+		EventDto eventDto = this.modelMapper.map(event, EventDto.class);
+		
+		
+		this.mockMvc.perform(put("/api/events/1111111111")
+				.contentType(MediaType.APPLICATION_JSON_UTF8)
+				.content(this.objectMapper.writeValueAsString(eventDto))
+				)
+			.andDo(print())
+			.andExpect(status().isNotFound());
+			;
+	}
+	
 	// 이벤트 30 개 저장
 	private Event generationEvent(int index) {
 		Event event = Event.builder()
@@ -305,4 +383,24 @@ public class EventControllerTests {
 		
 		return this.eventRepository.save(event);
 	}
+	
+	private Event generationEventUpdate(int index) {
+		Event event = Event.builder()
+				.name("event" + index)
+				.description("REST API")
+				.beginEnrollmentDateTime(LocalDateTime.of(2018, 11, 12, 14, 4, 21))
+				.closeEnrollmentDateTime(LocalDateTime.of(2018, 11, 13, 14, 4, 21))
+				.beginEventDateTime(LocalDateTime.of(2018, 11, 10, 14, 4, 21))
+				.endEventDateTime(LocalDateTime.of(2018, 11, 15, 15, 4, 21))
+				.basePrice(100)
+				.maxPrice(200)
+				.limitOfEnrollment(100)
+				.free(false)
+				.offline(true)
+				.eventStatus(EventStatus.DRAFT)
+				.location("강남")
+				.build();
+		
+		return this.eventRepository.save(event);
+	}			
 }
